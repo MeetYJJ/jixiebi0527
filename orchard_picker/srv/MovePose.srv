@@ -1,0 +1,8 @@
+geometry_msgs/Pose pose
+int32 speed
+int32 blend_radius
+bool wait
+---
+bool success
+string message
+string response_json
