@@ -1,0 +1,6 @@
+int32 position
+bool wait
+---
+bool success
+string message
+string response_json
