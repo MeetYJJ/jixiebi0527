@@ -1,8 +1,0 @@
-string request_json
-bool wait_for_response
-bool wait_for_trajectory
-int32 wait_device
----
-bool success
-string message
-string response_json

@@ -1,8 +1,0 @@
-float64[] joint_deg
-int32 speed
-int32 blend_radius
-bool wait
----
-bool success
-string message
-string response_json
