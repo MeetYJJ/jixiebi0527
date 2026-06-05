@@ -1,0 +1,123 @@
+rm_json_bridge:
+  ros__parameters:
+    host: "192.168.1.18"
+    port: 8080
+    auto_connect: true
+    connect_timeout: 3.0
+    recv_timeout: 0.2
+    response_timeout: 5.0
+    motion_timeout: 60.0
+    gripper_timeout: 20.0
+
+    # EG2-4B/4C needs 9-24V power. Keep this true when it is powered by the tool end.
+    set_tool_voltage_on_start: true
+    tool_voltage_type: 3   # 0: 0V, 2: 12V, 3: 24V
+
+    # EG2-4B/4C Inspire gripper, according to its Modbus RTU manual.
+    # RealMan Modbus port 1 means the tool-end RS485 on the end interface board.
+    gripper_driver: "inspire_modbus"
+    gripper_modbus_device: 1
+    gripper_modbus_port: 1
+    gripper_modbus_baudrate: 115200
+    gripper_modbus_timeout: 10   # Unit: 100 ms, so 10 means 1 second.
+    gripper_modbus_control_address: 10   # 10=open, 11=speed, 12=force
+    gripper_modbus_status_address: 65
+    gripper_release_position: 1000
+    gripper_pick_position: 0
+    gripper_position_force: 200
+    gripper_wait_status: true
+
+pick_task_manager:
+  ros__parameters:
+    driver_ns: "/rm_json_bridge"
+    wait_for_driver: true
+
+    base_frame: "base_link"
+    use_tf: true
+    target_pose_topic: "/apple/target_pose"
+    target_point_topic: "/apple/target_point"
+    # Checked only when a target is accepted. The accepted target is immediately
+    # transformed into base_frame and locked for the whole pick sequence.
+    target_timeout: 2.0
+    target_use_latest_tf: true
+    clear_target_on_success: true
+    clear_target_on_failure: false
+    transform_timeout: 0.5
+    service_call_timeout: 90.0
+    start_on_target: false
+
+    # Direction of the last straight approach in base_frame.
+    # pre_grasp = apple - approach_vector_base * approach_distance
+    approach_vector_base: [1.0, 0.0, 0.0]
+    approach_distance: 0.05
+    retreat_distance: 0.05
+    grasp_offset_base: [0.0, 0.0, 0.0]
+
+    # Safe posture from get_current_arm_state:
+    # joint protocol values [107149,-84991,112484,-130772,64784,85805] -> degrees.
+    home_joint_deg: [107.149, -84.991, 112.484, -130.772, 64.784, 85.805]
+
+    # TCP pose from get_current_arm_state:
+    # pose protocol values [150269,-219514,597973,782,409,1043]
+    # -> [0.150269 m, -0.219514 m, 0.597973 m, 0.782 rad, 0.409 rad, 1.043 rad].
+    safe_tcp_pose_m_rpy_rad: [0.150269, -0.219514, 0.597973, 0.782, 0.409, 1.043]
+    tcp_rpy_rad: [0.782, 0.409, 1.043]
+
+    workspace_min: [0.05, -0.50, 0.02]
+    workspace_max: [0.80, 0.50, 0.80]
+
+    movej_p_speed: 10
+    movel_speed: 8
+    home_speed: 10
+    twist_speed: 8
+    blend_radius: 0
+
+    gripper_release_speed: 300
+    gripper_pick_speed: 200
+    gripper_pick_force: 150
+
+    twist_joint_index: 5
+    twist_delta_deg: 45.0
+    twist_min_deg: -360.0
+    twist_max_deg: 360.0
+    sleep_after_grip: 0.3
+    sleep_after_twist: 0.2
+
+    return_home_on_failure: true
+    release_on_failure: false
+
+tcp_tf_publisher:
+  ros__parameters:
+    driver_ns: "/rm_json_bridge"
+    wait_for_driver: true
+    base_frame: "base_link"
+    tcp_frame: "tool0"
+    publish_rate: 5.0
+
+hand_eye_static_tf_publisher:
+  ros__parameters:
+    enabled: true
+    # The calibration matrix is configured as end-effector/tool frame -> camera frame.
+    parent_frame: "tool0"
+    child_frame: "camera_link"
+    invert_matrix: false
+    rotation_matrix:
+      [-0.86744386, 0.49747774, 0.00755313,
+       -0.49750175, -0.8674615, -0.00159558,
+        0.00575829, -0.00514177, 0.9999702]
+    translation_m: [-0.02051589, 0.09609254, 0.03490346]
+
+fake_apple_target:
+  ros__parameters:
+    topic: "/apple/target_pose"
+    frame_id: "base_link"
+    rate: 2.0
+
+    # Debug target near the safe TCP pose. With approach_distance=0.05 and
+    # approach_vector_base=[1,0,0], the pre-grasp pose is almost the safe pose.
+    x: 0.200269
+    y: -0.219514
+    z: 0.597973
+    roll: 0.782
+    pitch: 0.409
+    yaw: 1.043

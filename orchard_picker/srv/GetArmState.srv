@@ -1,0 +1,7 @@
+---
+bool success
+string message
+float64[] joint_deg
+geometry_msgs/Pose pose
+int32 err
+string response_json
